@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Portal — Attendance</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="nav-container">
+    <div class="logo">Student Portal</div>
+    <nav>
+      <ul>
+        <li><a href="index.html">Login</a></li>
+        <li><a href="events.html">Events</a></li>
+        <li><a href="attendance.html" class="active">Attendance</a></li>
+        <li><a href="feedback.html">Feedback</a></li>
+      </ul>
+    </nav>
+    <div id="nav-user"></div>
+  </div>
+</header>
+
+<main>
+  <h1>Attendance</h1>
+  <p class="subtitle">Select an event to view its registered students and mark attendance.</p>
+
+  <div id="page-message"></div>
+
+  <div class="box">
+    <div class="field">
+      <label for="event-select">Event</label>
+      <select id="event-select">
+        <option value="">— Select an event —</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="summary-box" class="box hidden">
+    <h2>Summary</h2>
+    <div class="row" id="summary-stats"></div>
+  </div>
+
+  <div id="roster-box" class="box hidden">
+    <div class="flex-between">
+      <h2 style="margin-bottom:0;">Roster</h2>
+      <div>
+        <button class="btn-outline btn-small" id="mark-all-present">Mark All Present</button>
+        <button class="btn-outline btn-small" id="mark-all-absent">Mark All Absent</button>
+      </div>
+    </div>
+    <table id="roster-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Roll No.</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="roster-body"></tbody>
+    </table>
+  </div>
+
+  <div id="no-event-box" class="empty">
+    Select an event above to view its attendance roster.
+  </div>
+</main>
+
+<footer>Student Portal &copy; 2026 — Built with HTML, CSS &amp; JavaScript</footer>
+
+<script src="storage.js"></script>
+<script>
+  const student = requireLogin();
+  let currentEventId = null;
+
+  function showMessage(text, type) {
+    const el = document.getElementById("page-message");
+    el.innerHTML = `<div class="message ${type}">${escapeHTML(text)}</div>`;
+    setTimeout(() => { el.innerHTML = ""; }, 3000);
+  }
+
+  function populateEventDropdown() {
+    const select = document.getElementById("event-select");
+    const events = getEvents().sort((a, b) => new Date(a.date) - new Date(b.date));
+    events.forEach(ev => {
+      const opt = document.createElement("option");
+      opt.value = ev.id;
+      opt.textContent = `${ev.title} — ${formatDate(ev.date)}`;
+      select.appendChild(opt);
+    });
+  }
+
+  function statusTag(status) {
+    if (status === "present") return `<span class="tag filled">Present</span>`;
+    if (status === "absent") return `<span class="tag">Absent</span>`;
+    return `<span class="tag">Unmarked</span>`;
+  }
+
+  function renderSummary(eventId) {
+    const summary = getAttendanceSummary(eventId);
+    document.getElementById("summary-stats").innerHTML = `
+      <div class="field"><label>Total Registered</label><div>${summary.total}</div></div>
+      <div class="field"><label>Present</label><div>${summary.present}</div></div>
+      <div class="field"><label>Absent</label><div>${summary.absent}</div></div>
+      <div class="field"><label>Unmarked</label><div>${summary.unmarked}</div></div>
+    `;
+  }
+
+  function renderRoster(eventId) {
+    const roster = getAttendanceRoster(eventId);
+    const tbody = document.getElementById("roster-body");
+
+    if (roster.length === 0) {
+      document.getElementById("roster-box").classList.add("hidden");
+      document.getElementById("summary-box").classList.add("hidden");
+      document.getElementById("no-event-box").classList.remove("hidden");
+      document.getElementById("no-event-box").textContent = "No students are registered for this event yet.";
+      return;
+    }
+
+    document.getElementById("no-event-box").classList.add("hidden");
+    document.getElementById("roster-box").classList.remove("hidden");
+    document.getElementById("summary-box").classList.remove("hidden");
+
+    tbody.innerHTML = roster.map(r => `
+      <tr>
+        <td>${escapeHTML(r.name)}</td>
+        <td>${escapeHTML(r.rollNo)}</td>
+        <td>${statusTag(r.status)}</td>
+        <td>
+          <button class="btn-small" data-action="present" data-email="${escapeHTML(r.email)}">Present</button>
+          <button class="btn-outline btn-small" data-action="absent" data-email="${escapeHTML(r.email)}">Absent</button>
+        </td>
+      </tr>
+    `).join("");
+
+    tbody.querySelectorAll("button").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const rosterEntry = roster.find(r => r.email === btn.dataset.email);
+        const result = markAttendance(eventId, btn.dataset.email, rosterEntry.name, btn.dataset.action);
+        if (result.ok) {
+          showMessage(`Marked ${rosterEntry.name} as ${btn.dataset.action}.`, "success");
+        } else {
+          showMessage(result.error, "error");
+        }
+        renderRoster(eventId);
+        renderSummary(eventId);
+      });
+    });
+
+    renderSummary(eventId);
+  }
+
+  document.getElementById("event-select").addEventListener("change", function () {
+    currentEventId = this.value;
+    if (!currentEventId) {
+      document.getElementById("roster-box").classList.add("hidden");
+      document.getElementById("summary-box").classList.add("hidden");
+      document.getElementById("no-event-box").classList.remove("hidden");
+      document.getElementById("no-event-box").textContent = "Select an event above to view its attendance roster.";
+      return;
+    }
+    renderRoster(currentEventId);
+  });
+
+  document.getElementById("mark-all-present").addEventListener("click", () => {
+    if (!currentEventId) return;
+    getAttendanceRoster(currentEventId).forEach(r => markAttendance(currentEventId, r.email, r.name, "present"));
+    showMessage("All students marked present.", "success");
+    renderRoster(currentEventId);
+  });
+
+  document.getElementById("mark-all-absent").addEventListener("click", () => {
+    if (!currentEventId) return;
+    getAttendanceRoster(currentEventId).forEach(r => markAttendance(currentEventId, r.email, r.name, "absent"));
+    showMessage("All students marked absent.", "success");
+    renderRoster(currentEventId);
+  });
+
+  if (student) {
+    populateEventDropdown();
+  }
+</script>
+</body>
+</html>

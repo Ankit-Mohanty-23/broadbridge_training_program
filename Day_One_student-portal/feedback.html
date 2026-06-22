@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Portal — Feedback</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="nav-container">
+    <div class="logo">Student Portal</div>
+    <nav>
+      <ul>
+        <li><a href="index.html">Login</a></li>
+        <li><a href="events.html">Events</a></li>
+        <li><a href="attendance.html">Attendance</a></li>
+        <li><a href="feedback.html" class="active">Feedback</a></li>
+      </ul>
+    </nav>
+    <div id="nav-user"></div>
+  </div>
+</header>
+
+<main>
+  <h1>Feedback</h1>
+  <p class="subtitle">Share your thoughts on an event or the portal in general.</p>
+
+  <div class="box">
+    <h2>Submit Feedback</h2>
+    <div id="form-message"></div>
+    <form id="feedback-form">
+      <div class="field">
+        <label for="fb-event">Related Event (optional)</label>
+        <select id="fb-event">
+          <option value="">General feedback (not event-specific)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Rating</label>
+        <div class="rating" id="rating-stars">
+          <span data-value="1">&#9733;</span>
+          <span data-value="2">&#9733;</span>
+          <span data-value="3">&#9733;</span>
+          <span data-value="4">&#9733;</span>
+          <span data-value="5">&#9733;</span>
+        </div>
+        <input type="hidden" id="fb-rating" value="0" required>
+      </div>
+
+      <div class="field">
+        <label for="fb-message">Your Feedback</label>
+        <textarea id="fb-message" required placeholder="Tell us what went well and what could be improved..."></textarea>
+      </div>
+
+      <button type="submit">Submit Feedback</button>
+    </form>
+  </div>
+
+  <div class="box">
+    <h2>Your Submitted Feedback</h2>
+    <div id="feedback-history"></div>
+  </div>
+</main>
+
+<footer>Student Portal &copy; 2026 — Built with HTML, CSS &amp; JavaScript</footer>
+
+<script src="storage.js"></script>
+<script>
+  const student = requireLogin();
+  let currentRating = 0;
+
+  function showMessage(text, type) {
+    document.getElementById("form-message").innerHTML =
+      `<div class="message ${type}">${escapeHTML(text)}</div>`;
+  }
+
+  function populateEventDropdown() {
+    const select = document.getElementById("fb-event");
+    getEvents().forEach(ev => {
+      const opt = document.createElement("option");
+      opt.value = ev.id;
+      opt.textContent = `${ev.title} — ${formatDate(ev.date)}`;
+      select.appendChild(opt);
+    });
+  }
+
+  function setupStars() {
+    const stars = document.querySelectorAll("#rating-stars span");
+    stars.forEach(star => {
+      star.addEventListener("click", () => {
+        currentRating = Number(star.dataset.value);
+        document.getElementById("fb-rating").value = currentRating;
+        stars.forEach(s => {
+          s.classList.toggle("active", Number(s.dataset.value) <= currentRating);
+        });
+      });
+    });
+  }
+
+  function renderHistory() {
+    const entries = getFeedbackForStudent(student.email)
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const container = document.getElementById("feedback-history");
+
+    if (entries.length === 0) {
+      container.innerHTML = `<div class="empty">You haven't submitted any feedback yet.</div>`;
+      return;
+    }
+
+    container.innerHTML = entries.map(f => {
+      const ev = f.eventId ? getEvent(f.eventId) : null;
+      const stars = "&#9733;".repeat(f.rating) + "&#9734;".repeat(5 - f.rating);
+      return `
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">${ev ? escapeHTML(ev.title) : "General Feedback"}</span>
+            <span class="tag">${stars}</span>
+          </div>
+          <div class="card-meta">${new Date(f.createdAt).toLocaleString()}</div>
+          <div class="card-desc">${escapeHTML(f.message)}</div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  if (student) {
+    populateEventDropdown();
+    setupStars();
+    renderHistory();
+
+    document.getElementById("feedback-form").addEventListener("submit", function (e) {
+      e.preventDefault();
+      if (currentRating === 0) {
+        showMessage("Please select a star rating.", "error");
+        return;
+      }
+      const eventId = document.getElementById("fb-event").value;
+      const message = document.getElementById("fb-message").value;
+
+      addFeedback({
+        studentEmail: student.email,
+        studentName: student.name,
+        eventId: eventId || null,
+        rating: currentRating,
+        message
+      });
+
+      showMessage("Thank you — your feedback has been submitted.", "success");
+      document.getElementById("feedback-form").reset();
+      document.querySelectorAll("#rating-stars span").forEach(s => s.classList.remove("active"));
+      currentRating = 0;
+      document.getElementById("fb-rating").value = 0;
+      renderHistory();
+    });
+  }
+</script>
+</body>
+</html>

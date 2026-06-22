@@ -1,0 +1,412 @@
+/* ============================================
+   Student Portal — Black & White Theme
+   ============================================ */
+
+:root {
+  --black: #000000;
+  --white: #ffffff;
+  --gray-dark: #1a1a1a;
+  --gray-mid: #555555;
+  --gray-light: #cccccc;
+  --gray-bg: #f4f4f4;
+  --border: #000000;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Courier New', Courier, monospace;
+  background: var(--white);
+  color: var(--black);
+  line-height: 1.6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- Header / Nav ---------- */
+header {
+  background: var(--black);
+  color: var(--white);
+  border-bottom: 3px solid var(--black);
+}
+
+.nav-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.logo {
+  font-size: 1.4rem;
+  font-weight: bold;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+nav ul {
+  list-style: none;
+  display: flex;
+  gap: 22px;
+  flex-wrap: wrap;
+}
+
+nav a {
+  color: var(--white);
+  text-decoration: none;
+  font-size: 0.95rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 6px 4px;
+  border-bottom: 2px solid transparent;
+  transition: border-color 0.2s ease;
+}
+
+nav a:hover,
+nav a.active {
+  border-bottom: 2px solid var(--white);
+}
+
+#nav-user {
+  color: var(--gray-light);
+  font-size: 0.85rem;
+}
+
+/* ---------- Main layout ---------- */
+main {
+  flex: 1;
+  max-width: 1000px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 40px 24px 60px;
+}
+
+footer {
+  text-align: center;
+  padding: 18px;
+  font-size: 0.8rem;
+  border-top: 3px solid var(--black);
+  color: var(--gray-mid);
+  letter-spacing: 1px;
+}
+
+/* ---------- Headings ---------- */
+h1 {
+  font-size: 2rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+  border-bottom: 4px solid var(--black);
+  padding-bottom: 14px;
+}
+
+h2 {
+  font-size: 1.3rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+}
+
+.subtitle {
+  color: var(--gray-mid);
+  margin-bottom: 30px;
+  font-size: 0.95rem;
+}
+
+/* ---------- Cards / Boxes ---------- */
+.box {
+  border: 2px solid var(--black);
+  padding: 28px;
+  margin-bottom: 30px;
+  background: var(--white);
+}
+
+.card {
+  border: 2px solid var(--black);
+  padding: 22px;
+  margin-bottom: 20px;
+  background: var(--white);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card:hover {
+  box-shadow: 6px 6px 0 var(--black);
+  transform: translate(-3px, -3px);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.card-title {
+  font-size: 1.15rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tag {
+  display: inline-block;
+  border: 1px solid var(--black);
+  padding: 2px 10px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.tag.filled {
+  background: var(--black);
+  color: var(--white);
+}
+
+.card-meta {
+  color: var(--gray-mid);
+  font-size: 0.85rem;
+  margin-bottom: 10px;
+}
+
+.card-desc {
+  font-size: 0.92rem;
+  margin-bottom: 14px;
+}
+
+/* ---------- Forms ---------- */
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: bold;
+}
+
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: 0.95rem;
+  padding: 10px 12px;
+  border: 2px solid var(--black);
+  background: var(--white);
+  color: var(--black);
+  outline: none;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  background: var(--gray-bg);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.row .field {
+  flex: 1;
+  min-width: 200px;
+}
+
+/* Rating stars */
+.rating {
+  display: flex;
+  gap: 6px;
+  font-size: 1.6rem;
+  cursor: pointer;
+}
+
+.rating span {
+  color: var(--gray-light);
+  transition: color 0.15s ease;
+}
+
+.rating span.active {
+  color: var(--black);
+}
+
+/* ---------- Buttons ---------- */
+button,
+.btn {
+  font-family: inherit;
+  background: var(--black);
+  color: var(--white);
+  border: 2px solid var(--black);
+  padding: 12px 22px;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+button:hover,
+.btn:hover {
+  background: var(--white);
+  color: var(--black);
+}
+
+.btn-outline {
+  background: var(--white);
+  color: var(--black);
+}
+
+.btn-outline:hover {
+  background: var(--black);
+  color: var(--white);
+}
+
+.btn-small {
+  padding: 7px 14px;
+  font-size: 0.78rem;
+}
+
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ---------- Tabs (login/register) ---------- */
+.tabs {
+  display: flex;
+  border-bottom: 2px solid var(--black);
+  margin-bottom: 24px;
+}
+
+.tab-btn {
+  flex: 1;
+  background: var(--white);
+  color: var(--black);
+  border: none;
+  border-bottom: 4px solid transparent;
+  padding: 12px;
+  font-size: 0.95rem;
+}
+
+.tab-btn:hover {
+  background: var(--gray-bg);
+}
+
+.tab-btn.active {
+  border-bottom: 4px solid var(--black);
+  font-weight: bold;
+}
+
+.tab-panel {
+  display: none;
+}
+
+.tab-panel.active {
+  display: block;
+}
+
+/* ---------- Messages ---------- */
+.message {
+  padding: 12px 16px;
+  border: 2px solid var(--black);
+  margin-bottom: 18px;
+  font-size: 0.9rem;
+}
+
+.message.error {
+  background: var(--black);
+  color: var(--white);
+}
+
+.message.success {
+  background: var(--white);
+  color: var(--black);
+  border-style: dashed;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ---------- Empty state ---------- */
+.empty {
+  text-align: center;
+  padding: 50px 20px;
+  color: var(--gray-mid);
+  border: 2px dashed var(--gray-light);
+}
+
+/* ---------- Utility ---------- */
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.small {
+  font-size: 0.8rem;
+  color: var(--gray-mid);
+}
+
+.center {
+  text-align: center;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--gray-light);
+  margin: 20px 0;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+th, td {
+  border: 1px solid var(--black);
+  padding: 8px 10px;
+  text-align: left;
+  font-size: 0.85rem;
+}
+
+th {
+  background: var(--black);
+  color: var(--white);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+@media (max-width: 600px) {
+  h1 { font-size: 1.5rem; }
+  .nav-container { flex-direction: column; align-items: flex-start; }
+}
