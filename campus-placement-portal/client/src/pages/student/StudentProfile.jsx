@@ -5,21 +5,27 @@ export default function StudentProfile() {
   const [profile, setProfile] = useState(null);
   const [skillsInput, setSkillsInput] = useState("");
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
-  const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [file, setFile] = useState(null);
+  // Separate success and error feedback
+  const [feedback, setFeedback] = useState({ message: "", type: "" });
 
   useEffect(() => {
-    api.get("/students/me/profile").then((res) => {
-      setProfile(res.data.user);
-      setSkillsInput((res.data.user.skills || []).join(", "));
-    });
+    api
+      .get("/students/me/profile")
+      .then((res) => {
+        setProfile(res.data.user);
+        setSkillsInput((res.data.user.skills || []).join(", "));
+      })
+      .catch(() =>
+        setFeedback({ message: "Could not load profile. Please refresh the page.", type: "error" })
+      );
   }, []);
 
   async function handleSave(e) {
     e.preventDefault();
     setSaving(true);
-    setMessage("");
+    setFeedback({ message: "", type: "" });
     try {
       const skills = skillsInput
         .split(",")
@@ -30,9 +36,12 @@ export default function StudentProfile() {
         skills,
       });
       setProfile(res.data.user);
-      setMessage("Profile saved.");
+      setFeedback({ message: "Profile saved successfully.", type: "success" });
     } catch (err) {
-      setMessage(err.response?.data?.error || "Could not save profile.");
+      setFeedback({
+        message: err.response?.data?.error || "Could not save profile.",
+        type: "error",
+      });
     } finally {
       setSaving(false);
     }
@@ -42,7 +51,7 @@ export default function StudentProfile() {
     e.preventDefault();
     if (!file) return;
     setUploading(true);
-    setMessage("");
+    setFeedback({ message: "", type: "" });
     try {
       const formData = new FormData();
       formData.append("resume", file);
@@ -50,10 +59,13 @@ export default function StudentProfile() {
         headers: { "Content-Type": "multipart/form-data" },
       });
       setProfile(res.data.user);
-      setMessage("Resume uploaded.");
+      setFeedback({ message: "Resume uploaded successfully.", type: "success" });
       setFile(null);
     } catch (err) {
-      setMessage(err.response?.data?.error || "Resume upload failed.");
+      setFeedback({
+        message: err.response?.data?.error || "Resume upload failed.",
+        type: "error",
+      });
     } finally {
       setUploading(false);
     }
@@ -66,7 +78,17 @@ export default function StudentProfile() {
     }));
   }
 
-  if (!profile) return <div className="layout">Loading...</div>;
+  // Profile hasn't loaded yet but no error either — still fetching
+  if (!profile && !feedback.message) return <div className="layout">Loading...</div>;
+
+  // Profile failed to load
+  if (!profile && feedback.message) {
+    return (
+      <div className="layout">
+        <div className="error-banner">{feedback.message}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="layout">
@@ -76,7 +98,11 @@ export default function StudentProfile() {
         <p className="page-subtitle">{profile.email}</p>
       </div>
 
-      {message && <div className="error-banner">{message}</div>}
+      {feedback.message && (
+        <div className={feedback.type === "success" ? "success-banner" : "error-banner"}>
+          {feedback.message}
+        </div>
+      )}
 
       <div className="section">
         <h3 className="card-title">Academic details</h3>
