@@ -5,11 +5,13 @@ import api from "../../api/client.js";
 export default function RecruiterJobs() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     api
       .get("/jobs")
       .then((res) => setJobs(res.data.jobs))
+      .catch(() => setError("Could not load your job postings. Please try again."))
       .finally(() => setLoading(false));
   }, []);
 
@@ -27,9 +29,11 @@ export default function RecruiterJobs() {
         </div>
       </div>
 
+      {error && <div className="error-banner">{error}</div>}
+
       {loading ? (
         <p>Loading...</p>
-      ) : jobs.length === 0 ? (
+      ) : jobs.length === 0 && !error ? (
         <div className="empty-state">You haven't posted any jobs yet.</div>
       ) : (
         jobs.map((job) => (
