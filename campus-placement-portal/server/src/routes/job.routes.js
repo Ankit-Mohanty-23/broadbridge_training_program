@@ -35,23 +35,44 @@ router.get("/", requireAuth, async (req, res) => {
       filter.isActive = true;
       const { cgpa, branch, graduationYear } = req.user.academicInfo || {};
 
-      filter.$and = [
-        {
-          $or: [{ "eligibility.minCgpa": { $lte: cgpa || 0 } }, { "eligibility.minCgpa": 0 }],
-        },
-        {
+      // Only apply an eligibility condition when the student has actually filled
+      // that field in. A fresh profile (no data) should see ALL active jobs.
+      // A fully-filled profile sees only jobs they genuinely qualify for.
+      const andConditions = [];
+
+      // CGPA: only filter if the student has a CGPA recorded
+      if (cgpa) {
+        andConditions.push({
           $or: [
-            { "eligibility.branches": { $size: 0 } },
-            { "eligibility.branches": branch },
+            { "eligibility.minCgpa": 0 },          // no minimum set
+            { "eligibility.minCgpa": { $lte: cgpa } }, // student meets the minimum
           ],
-        },
-        {
+        });
+      }
+
+      // Branch: only filter if the student has a branch recorded
+      if (branch) {
+        andConditions.push({
           $or: [
-            { "eligibility.graduationYear": null },
+            { "eligibility.branches": { $size: 0 } }, // open to all branches
+            { "eligibility.branches": branch },        // student's branch is listed
+          ],
+        });
+      }
+
+      // Graduation year: only filter if the student has a graduation year recorded
+      if (graduationYear) {
+        andConditions.push({
+          $or: [
+            { "eligibility.graduationYear": null },       // no year restriction
             { "eligibility.graduationYear": graduationYear },
           ],
-        },
-      ];
+        });
+      }
+
+      if (andConditions.length > 0) {
+        filter.$and = andConditions;
+      }
     } else if (req.user.role === "recruiter") {
       filter.recruiter = req.user.id;
     }
