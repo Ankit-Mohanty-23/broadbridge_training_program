@@ -48,7 +48,6 @@ export default function Register() {
             >
               <option value="student">Student</option>
               <option value="recruiter">Recruiter</option>
-              <option value="admin">Placement Admin</option>
             </select>
           </div>
 

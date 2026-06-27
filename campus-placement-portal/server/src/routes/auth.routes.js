@@ -14,8 +14,8 @@ router.post("/register", async (req, res) => {
     if (!name || !email || !password || !role) {
       return res.status(400).json({ error: "Name, email, password, and role are required." });
     }
-    if (!["student", "recruiter", "admin"].includes(role)) {
-      return res.status(400).json({ error: "Role must be student, recruiter, or admin." });
+    if (!["student", "recruiter"].includes(role)) {
+      return res.status(400).json({ error: "Public registration is only available for student or recruiter accounts." });
     }
     if (password.length < 6) {
       return res.status(400).json({ error: "Password must be at least 6 characters." });
