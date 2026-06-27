@@ -113,9 +113,14 @@ export default function RecruiterNewJob() {
           />
         </div>
 
-        <button className="btn" type="submit" disabled={submitting}>
-          {submitting ? "Posting..." : "Post job"}
-        </button>
+        <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+          <button className="btn" type="submit" disabled={submitting}>
+            {submitting ? "Posting..." : "Post job"}
+          </button>
+          <a href="/recruiter" className="btn btn-ghost" onClick={(e) => { e.preventDefault(); window.history.back(); }}>
+            Cancel
+          </a>
+        </div>
       </form>
     </div>
   );
