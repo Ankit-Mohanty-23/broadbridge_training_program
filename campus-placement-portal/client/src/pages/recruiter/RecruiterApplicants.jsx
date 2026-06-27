@@ -6,6 +6,7 @@ export default function RecruiterApplicants() {
   const { jobId } = useParams();
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [schedulingId, setSchedulingId] = useState(null);
   const [slotForm, setSlotForm] = useState({ scheduledAt: "", mode: "", notes: "" });
 
@@ -15,22 +16,26 @@ export default function RecruiterApplicants() {
 
   async function loadApplicants() {
     setLoading(true);
+    setError("");
     try {
       const res = await api.get(`/applications/job/${jobId}`);
       setApplications(res.data.applications);
+    } catch (err) {
+      setError(err.response?.data?.error || "Could not load applicants. Please try again.");
     } finally {
       setLoading(false);
     }
   }
 
   async function handleScheduleSubmit(applicationId) {
+    setError("");
     try {
       await api.patch(`/applications/${applicationId}/interview`, slotForm);
       setSchedulingId(null);
       setSlotForm({ scheduledAt: "", mode: "", notes: "" });
       loadApplicants();
     } catch (err) {
-      alert(err.response?.data?.error || "Could not schedule interview.");
+      setError(err.response?.data?.error || "Could not schedule interview.");
     }
   }
 
@@ -41,9 +46,11 @@ export default function RecruiterApplicants() {
         <h1 className="page-title">Candidates for this role</h1>
       </div>
 
+      {error && <div className="error-banner">{error}</div>}
+
       {loading ? (
         <p>Loading...</p>
-      ) : applications.length === 0 ? (
+      ) : applications.length === 0 && !error ? (
         <div className="empty-state">No applicants yet.</div>
       ) : (
         applications.map((app) => (
