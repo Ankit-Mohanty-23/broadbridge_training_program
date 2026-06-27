@@ -68,6 +68,8 @@ export default function Register() {
                 id="company"
                 value={form.company}
                 onChange={(e) => update("company", e.target.value)}
+                required
+                placeholder="Acme Corp"
               />
             </div>
           )}
