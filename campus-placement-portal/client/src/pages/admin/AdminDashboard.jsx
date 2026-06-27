@@ -6,6 +6,7 @@ const STATUS_OPTIONS = ["applied", "shortlisted", "rejected", "selected"];
 export default function AdminDashboard() {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     loadApplications();
@@ -13,22 +14,26 @@ export default function AdminDashboard() {
 
   async function loadApplications() {
     setLoading(true);
+    setError("");
     try {
       const res = await api.get("/applications");
       setApplications(res.data.applications);
+    } catch (err) {
+      setError(err.response?.data?.error || "Could not load applications. Please try again.");
     } finally {
       setLoading(false);
     }
   }
 
   async function handleStatusChange(id, status) {
+    setError("");
     try {
       await api.patch(`/applications/${id}/status`, { status });
       setApplications((prev) =>
         prev.map((a) => (a._id === id ? { ...a, status } : a))
       );
     } catch (err) {
-      alert(err.response?.data?.error || "Could not update status.");
+      setError(err.response?.data?.error || "Could not update status.");
     }
   }
 
@@ -40,9 +45,11 @@ export default function AdminDashboard() {
         <p className="page-subtitle">Manage the placement pipeline across every job posting.</p>
       </div>
 
+      {error && <div className="error-banner">{error}</div>}
+
       {loading ? (
         <p>Loading...</p>
-      ) : applications.length === 0 ? (
+      ) : applications.length === 0 && !error ? (
         <div className="empty-state">No applications yet.</div>
       ) : (
         <table className="data-table">
