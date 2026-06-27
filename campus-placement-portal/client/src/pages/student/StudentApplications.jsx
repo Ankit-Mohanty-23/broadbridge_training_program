@@ -4,11 +4,13 @@ import api from "../../api/client.js";
 export default function StudentApplications() {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     api
       .get("/applications/me")
       .then((res) => setApplications(res.data.applications))
+      .catch(() => setError("Could not load your applications. Please try again."))
       .finally(() => setLoading(false));
   }, []);
 
@@ -20,9 +22,11 @@ export default function StudentApplications() {
         <p className="page-subtitle">Status updates and interview slots, in one place.</p>
       </div>
 
+      {error && <div className="error-banner">{error}</div>}
+
       {loading ? (
         <p>Loading...</p>
-      ) : applications.length === 0 ? (
+      ) : applications.length === 0 && !error ? (
         <div className="empty-state">You haven't applied to any jobs yet.</div>
       ) : (
         applications.map((app) => (
