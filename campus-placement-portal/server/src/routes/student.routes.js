@@ -1,7 +1,14 @@
 import express from "express";
+import path from "path";
+import { fileURLToPath } from "url";
 import User from "../models/User.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { uploadResume } from "../middleware/upload.js";
+
+// __dirname equivalent for ESM modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const RESUME_DIR = path.resolve(__dirname, "../../uploads/resumes");
 
 const router = express.Router();
 
@@ -65,9 +72,7 @@ router.get("/me/resume", requireAuth, requireRole("student"), async (req, res) =
   if (!req.user.resume?.filename) {
     return res.status(404).json({ error: "No resume uploaded yet." });
   }
-  res.sendFile(req.user.resume.filename, {
-    root: "uploads/resumes",
-  });
+  res.sendFile(req.user.resume.filename, { root: RESUME_DIR });
 });
 
 export default router;
