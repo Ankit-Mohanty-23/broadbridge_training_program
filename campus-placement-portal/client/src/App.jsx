@@ -1,11 +1,14 @@
 import { Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
+import PublicOnlyRoute from "./components/PublicOnlyRoute.jsx";
 import Topbar from "./components/Topbar.jsx";
+import Footer from "./components/Footer.jsx";
 
 import Landing from "./pages/Landing.jsx";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
+import NotFound from "./pages/NotFound.jsx";
 
 import StudentJobs from "./pages/student/StudentJobs.jsx";
 import StudentApplications from "./pages/student/StudentApplications.jsx";
@@ -22,10 +25,33 @@ export default function App() {
     <AuthProvider>
       <Topbar />
       <Routes>
-        <Route path="/" element={<Landing />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        {/* Public-only routes — logged-in users are redirected to their dashboard */}
+        <Route
+          path="/"
+          element={
+            <PublicOnlyRoute>
+              <Landing />
+            </PublicOnlyRoute>
+          }
+        />
+        <Route
+          path="/login"
+          element={
+            <PublicOnlyRoute>
+              <Login />
+            </PublicOnlyRoute>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <PublicOnlyRoute>
+              <Register />
+            </PublicOnlyRoute>
+          }
+        />
 
+        {/* Student routes */}
         <Route
           path="/student"
           element={
@@ -51,6 +77,7 @@ export default function App() {
           }
         />
 
+        {/* Recruiter routes */}
         <Route
           path="/recruiter"
           element={
@@ -76,6 +103,7 @@ export default function App() {
           }
         />
 
+        {/* Admin routes */}
         <Route
           path="/admin"
           element={
@@ -84,7 +112,11 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+
+        {/* 404 catch-all */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
+      <Footer />
     </AuthProvider>
   );
 }
