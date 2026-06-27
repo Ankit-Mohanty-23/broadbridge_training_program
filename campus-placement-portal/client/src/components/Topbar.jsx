@@ -20,10 +20,14 @@ export default function Topbar() {
 
   const links = user ? NAV_BY_ROLE[user.role] || [] : [];
 
+  // When logged in the logo acts as a "home" shortcut to the user's dashboard.
+  // When logged out it points to the public landing page.
+  const brandTo = user ? `/${user.role}` : "/";
+
   return (
     <header className="topbar">
       <div className="topbar-inner">
-        <Link to="/" className="brand">
+        <Link to={brandTo} className="brand">
           <span className="brand-mark" />
           Campus Placement
         </Link>
