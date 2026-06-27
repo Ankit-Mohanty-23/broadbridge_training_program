@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Portal — Login / Register</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="nav-container">
+    <div class="logo">Student Portal</div>
+    <nav>
+      <ul>
+        <li><a href="index.html" class="active">Login</a></li>
+        <li><a href="events.html">Events</a></li>
+        <li><a href="attendance.html">Attendance</a></li>
+        <li><a href="feedback.html">Feedback</a></li>
+      </ul>
+    </nav>
+    <div id="nav-user"></div>
+  </div>
+</header>
+
+<main>
+  <h1>Welcome</h1>
+  <p class="subtitle">Login to your account or register as a new student to access events and submit feedback.</p>
+
+  <div class="box">
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="login">Login</button>
+      <button class="tab-btn" data-tab="register">Register</button>
+    </div>
+
+    <div id="form-message"></div>
+
+    <!-- LOGIN -->
+    <div class="tab-panel active" id="login-panel">
+      <form id="login-form">
+        <div class="field">
+          <label for="login-email">Email</label>
+          <input type="email" id="login-email" required placeholder="you@college.edu">
+        </div>
+        <div class="field">
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" required placeholder="••••••••">
+        </div>
+        <button type="submit">Login</button>
+      </form>
+    </div>
+
+    <!-- REGISTER -->
+    <div class="tab-panel" id="register-panel">
+      <form id="register-form">
+        <div class="row">
+          <div class="field">
+            <label for="reg-name">Full Name</label>
+            <input type="text" id="reg-name" required placeholder="Jane Doe">
+          </div>
+          <div class="field">
+            <label for="reg-roll">Roll Number</label>
+            <input type="text" id="reg-roll" required placeholder="CSE2027045">
+          </div>
+        </div>
+        <div class="field">
+          <label for="reg-email">Email</label>
+          <input type="email" id="reg-email" required placeholder="you@college.edu">
+        </div>
+        <div class="row">
+          <div class="field">
+            <label for="reg-password">Password</label>
+            <input type="password" id="reg-password" required minlength="4" placeholder="At least 4 characters">
+          </div>
+          <div class="field">
+            <label for="reg-confirm">Confirm Password</label>
+            <input type="password" id="reg-confirm" required minlength="4" placeholder="Re-enter password">
+          </div>
+        </div>
+        <button type="submit">Create Account</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="small center">
+    Data is stored locally in your browser as a JSON record.
+    <a href="#" id="export-link">Export data file</a> ·
+    <a href="#" id="import-link">Import data file</a>
+    <input type="file" id="import-file" accept="application/json" class="hidden">
+  </div>
+</main>
+
+<footer>Student Portal &copy; 2026 — Built with HTML, CSS &amp; JavaScript</footer>
+
+<script src="storage.js"></script>
+<script>
+  // Tab switching
+  document.querySelectorAll(".tab-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+      btn.classList.add("active");
+      document.getElementById(btn.dataset.tab + "-panel").classList.add("active");
+      document.getElementById("form-message").innerHTML = "";
+    });
+  });
+
+  function showMessage(text, type) {
+    document.getElementById("form-message").innerHTML =
+      `<div class="message ${type}">${escapeHTML(text)}</div>`;
+  }
+
+  // If already logged in, redirect to events
+  if (getCurrentStudent()) {
+    window.location.href = "events.html";
+  }
+
+  // Login
+  document.getElementById("login-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    const email = document.getElementById("login-email").value;
+    const password = document.getElementById("login-password").value;
+    const result = loginStudent({ email, password });
+    if (result.ok) {
+      setCurrentStudent(result.student);
+      showMessage("Login successful. Redirecting...", "success");
+      setTimeout(() => window.location.href = "events.html", 600);
+    } else {
+      showMessage(result.error, "error");
+    }
+  });
+
+  // Register
+  document.getElementById("register-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    const name = document.getElementById("reg-name").value;
+    const rollNo = document.getElementById("reg-roll").value;
+    const email = document.getElementById("reg-email").value;
+    const password = document.getElementById("reg-password").value;
+    const confirm = document.getElementById("reg-confirm").value;
+
+    if (password !== confirm) {
+      showMessage("Passwords do not match.", "error");
+      return;
+    }
+
+    const result = registerStudent({ name, email, rollNo, password });
+    if (result.ok) {
+      setCurrentStudent(result.student);
+      showMessage("Account created successfully. Redirecting...", "success");
+      setTimeout(() => window.location.href = "events.html", 600);
+    } else {
+      showMessage(result.error, "error");
+    }
+  });
+
+  // Export / Import data file
+  document.getElementById("export-link").addEventListener("click", function (e) {
+    e.preventDefault();
+    exportDB();
+  });
+
+  document.getElementById("import-link").addEventListener("click", function (e) {
+    e.preventDefault();
+    document.getElementById("import-file").click();
+  });
+
+  document.getElementById("import-file").addEventListener("change", function (e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    importDB(file, function (success) {
+      if (success) {
+        showMessage("Data imported successfully.", "success");
+      } else {
+        showMessage("Failed to import file. Make sure it's a valid export from this site.", "error");
+      }
+    });
+  });
+</script>
+</body>
+</html>

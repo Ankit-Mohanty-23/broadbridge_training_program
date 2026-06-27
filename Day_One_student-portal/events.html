@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Portal — Events</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <div class="nav-container">
+    <div class="logo">Student Portal</div>
+    <nav>
+      <ul>
+        <li><a href="index.html">Login</a></li>
+        <li><a href="events.html" class="active">Events</a></li>
+        <li><a href="attendance.html">Attendance</a></li>
+        <li><a href="feedback.html">Feedback</a></li>
+      </ul>
+    </nav>
+    <div id="nav-user"></div>
+  </div>
+</header>
+
+<main>
+  <h1>Campus Events</h1>
+  <p class="subtitle">Browse upcoming events and register your seat below.</p>
+
+  <div id="page-message"></div>
+  <div id="events-list"></div>
+</main>
+
+<footer>Student Portal &copy; 2026 — Built with HTML, CSS &amp; JavaScript</footer>
+
+<script src="storage.js"></script>
+<script>
+  const student = requireLogin();
+
+  function showMessage(text, type) {
+    const el = document.getElementById("page-message");
+    el.innerHTML = `<div class="message ${type}">${escapeHTML(text)}</div>`;
+    setTimeout(() => { el.innerHTML = ""; }, 3500);
+  }
+
+  function renderEvents() {
+    const events = getEvents().sort((a, b) => new Date(a.date) - new Date(b.date));
+    const container = document.getElementById("events-list");
+
+    if (events.length === 0) {
+      container.innerHTML = `<div class="empty">No events available right now.</div>`;
+      return;
+    }
+
+    container.innerHTML = events.map(ev => {
+      const isRegistered = student && ev.registered.includes(student.email);
+      const seatsLeft = ev.seats - ev.registered.length;
+      const full = seatsLeft <= 0;
+
+      let buttonHTML;
+      if (isRegistered) {
+        buttonHTML = `<button class="btn-outline btn-small" data-action="unregister" data-id="${ev.id}">Cancel Registration</button>`;
+      } else if (full) {
+        buttonHTML = `<button class="btn-small" disabled>Event Full</button>`;
+      } else {
+        buttonHTML = `<button class="btn-small" data-action="register" data-id="${ev.id}">Register</button>`;
+      }
+
+      return `
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">${escapeHTML(ev.title)}</span>
+            <span class="tag ${isRegistered ? "filled" : ""}">${isRegistered ? "Registered" : full ? "Full" : "Open"}</span>
+          </div>
+          <div class="card-meta">
+            ${formatDate(ev.date)} &nbsp;•&nbsp; ${escapeHTML(ev.venue)} &nbsp;•&nbsp; ${seatsLeft} / ${ev.seats} seats left
+          </div>
+          <div class="card-desc">${escapeHTML(ev.description)}</div>
+          ${buttonHTML}
+        </div>
+      `;
+    }).join("");
+
+    // attach handlers
+    container.querySelectorAll("[data-action='register']").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const result = registerForEvent(btn.dataset.id, student.email);
+        if (result.ok) {
+          showMessage("You have been registered for the event.", "success");
+        } else {
+          showMessage(result.error, "error");
+        }
+        renderEvents();
+      });
+    });
+
+    container.querySelectorAll("[data-action='unregister']").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const result = unregisterFromEvent(btn.dataset.id, student.email);
+        if (result.ok) {
+          showMessage("Your registration has been cancelled.", "success");
+        } else {
+          showMessage(result.error, "error");
+        }
+        renderEvents();
+      });
+    });
+  }
+
+  if (student) renderEvents();
+</script>
+</body>
+</html>
