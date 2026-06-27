@@ -43,12 +43,26 @@ router.get("/me", requireAuth, requireRole("student"), async (req, res) => {
 });
 
 // GET /api/applications/job/:jobId - recruiter/admin views applicants for a job
+// BUG-06 FIX: recruiters can only view applicants for their OWN jobs
 router.get(
   "/job/:jobId",
   requireAuth,
   requireRole("recruiter", "admin"),
   async (req, res) => {
     try {
+      // For recruiters, verify the job belongs to them before exposing applicants
+      if (req.user.role === "recruiter") {
+        const job = await JobPosting.findOne({
+          _id: req.params.jobId,
+          recruiter: req.user.id,
+        });
+        if (!job) {
+          return res
+            .status(403)
+            .json({ error: "You don't have access to this job's applicants." });
+        }
+      }
+
       const applications = await Application.find({ job: req.params.jobId })
         .populate("student", "name email skills academicInfo resume")
         .sort({ createdAt: -1 });
@@ -94,6 +108,7 @@ router.patch("/:id/status", requireAuth, requireRole("admin"), async (req, res) 
 });
 
 // PATCH /api/applications/:id/interview - recruiter assigns interview slot
+// BUG-07 FIX: only the recruiter who owns the job can assign interview slots
 router.patch(
   "/:id/interview",
   requireAuth,
@@ -102,13 +117,20 @@ router.patch(
     try {
       const { scheduledAt, mode, notes } = req.body;
 
-      const application = await Application.findByIdAndUpdate(
-        req.params.id,
-        { interviewSlot: { scheduledAt, mode, notes } },
-        { new: true }
-      );
+      // First fetch the application and verify the job belongs to this recruiter
+      const application = await Application.findById(req.params.id).populate("job");
+      if (!application) {
+        return res.status(404).json({ error: "Application not found." });
+      }
+      if (application.job.recruiter.toString() !== req.user.id.toString()) {
+        return res
+          .status(403)
+          .json({ error: "You don't have permission to modify this application." });
+      }
 
-      if (!application) return res.status(404).json({ error: "Application not found." });
+      application.interviewSlot = { scheduledAt, mode, notes };
+      await application.save();
+
       res.json({ application });
     } catch (err) {
       res.status(500).json({ error: "Could not assign interview slot.", detail: err.message });
